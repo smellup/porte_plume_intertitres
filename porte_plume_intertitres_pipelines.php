@@ -8,11 +8,12 @@
  * @licence    GNU/GPL
  * @package    SPIP\Porte_plume_intertitres\Pipelines
  */
+if (!defined('_ECRIRE_INC_VERSION')) {
+	return;
+}
 
-if (!defined('_ECRIRE_INC_VERSION')) return;
 
-
-function porte_plume_intertitres_ieconfig_metas($table){
+function porte_plume_intertitres_ieconfig_metas($table) {
 	$table['porte_plume_intertitres']['titre'] = _T('porte_plume_intertitres:porte_plume_intertitres');
 	$table['porte_plume_intertitres']['icone'] = 'prive/themes/spip/images/porte_plume_intertitres-16.png';
 	$table['porte_plume_intertitres']['metas_serialize'] = 'porte_plume_intertitres';
@@ -20,7 +21,7 @@ function porte_plume_intertitres_ieconfig_metas($table){
 }
 
 // http://www.spip-contrib.net/Porte-Plume-documentation-technique
-function porte_plume_intertitres_porte_plume_barre_pre_charger($barres){
+function porte_plume_intertitres_porte_plume_barre_pre_charger($barres) {
 	static $base_level = false;
 	if(!$base_level){
 		$base_level = get_heading_base_level();
@@ -156,91 +157,4 @@ function porte_plume_intertitres_porte_plume_lien_classe_vers_icone($flux){
 	);
 	 //var_dump($icones);
 	return array_merge($flux, $icones);
-}
-// Numérotation/incrémentation des titres de type référence
-// avant le passage de textWheel.
-// On numérotte et on prépare pour le traitement par textWheel
-// http://contrib.spip.net/Generation-automatique-de
-function porte_plume_intertitres_pre_propre($texte) {
-
-  // on cherche les noms de section commençant par des #
-  // http://lumadis.be/regex/test_regex.php?id=2929
-  /*
-	[0]=> array
-		[0]=>{{{# Reference H4 }}}
-		[1]=>{{{## Reference sub }}}
-		[2]=>{{{# Reference H4 }}}
-		[3]=>{{{## Reference sub }}}
-	[1]=> array
-		[0]=>{{{
-		[1]=>{{{
-		[2]=>{{{
-		[3]=>{{{
-	[2]=> array
-		[0]=>#
-		[1]=>##
-		[2]=>#
-		[3]=>##
-	[3]=> array
-		[0]=> Reference H4
-		[1]=> Reference sub
-		[2]=> Reference H4
-		[3]=> Reference sub
-	[4]=> array
-		[0]=>}}}
-		[1]=>}}}
-		[2]=>}}}
-		[3]=>}}}
-*/
-  // retourne le nombre de matches
-  $count = preg_match_all("/({{{)(\#{1,5})(.*)(}}})/i", $texte, $matches);
-
-  //initialisation du compteur
-  $cnt[0] = 0;
-
-  //pour chaque titre trouvé
-  for ($j=0; $j < $count; $j++) {
-
-	$level = $matches[2][$j];
-	$titre = $matches[3][$j];
-
-	//on est au niveau de base {{{# }}}
-	if(strlen($level) == 1) {
-
-		//on réinitialise le compteur de ce titre
-		for ($i=1; $i < count($cnt); $i++) {
-			$cnt[$i] = 0;
-		}
-        //on incrémente cnt[0]
-		$numeros = ++$cnt[0];
-
-		$titre = $numeros.' - '.$titre;
-	} else {
-        // on est à un niveau plus profond
-        // on construit le numéros
-		$numeros = $cnt[0].'.';
-		for ($i=1; $i < strlen($level)-1; $i++) {
-		  $numeros .= $cnt[$i].".";
-		}
-		$numeros = $numeros.(++$cnt[$i]);
-		//on génère le titre
-		$titre = $numeros.' - '.$titre;
-	}
-
-	$debut_markup = $matches[1][$j].$matches[2][$j];
-	$fin_markup =  $matches[4][$j];
-
-	$haystack = $texte;
-	$needle = $matches[0][$j];
-	$replace = $debut_markup.$titre.$fin_markup ;
-	// Ne remplacer que la première occurence trouvé, au cas ou des titres soient identique
-	// http://stackoverflow.com/questions/1252693/using-str-replace-so-that-it-only-acts-on-the-first-match/1252710#1252710
-	$pos = strpos($haystack, $needle);
-	if ($pos !== false) {
-		$texte = substr_replace($haystack, $replace, $pos, strlen($needle));
-	}
-
-  }
-
-  return $texte;
 }
